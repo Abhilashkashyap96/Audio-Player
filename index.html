@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="./style.css" />
+  <title>Document</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css"
+    integrity="sha512-PgQMlq+nqFLV4ylk1gwUOgm6CtIIXkKwaIHp/PAIWHzig/lKZSEGKEysh0TCVbHJXCLN7WetD8TFecIky75ZfQ=="
+    crossorigin="anonymous" />
+</head>
+
+<body>
+  <div class="music_container">
+    <audio>
+      <source src="./songs/song.mp3" type="audio/mp3" />
+    </audio>
+    <canvas id="progress_canvas" width="1000" height="400"></canvas>
+    <div class="music_controls">
+      <div class="play">
+        <i class="fas fa-play" id="play" title="Play"></i>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Music player
+    const music = document.querySelector('audio')
+    const play = document.getElementById('play');
+    const pause = document.getElementById('play');
+
+    let progress = document.getElementById('progress');
+    const progress_bar = document.getElementById('progress_bar')
+
+    let isPlaying = false;
+    
+    
+    // Play Functionality
+    
+    
+    const playMusic = () => {
+      isPlaying = true;
+      music.play();
+      play.classList.replace('fa-play', 'fa-pause')
+    };
+
+
+    // Pause Functionality
+
+
+    const pauseMusic = () => {
+      isPlaying = false;
+      music.pause();
+      play.classList.replace('fa-pause', 'fa-play')
+    };
+
+    play.addEventListener("click", () => {
+      if (isPlaying) {
+        pauseMusic();
+      } else {
+        playMusic();
+      }
+    });
+
+    function randomNumber(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    // Canvas code
+    const canvas = document.getElementById('progress_canvas');
+    const canvasHeight = canvas.height;
+    const canvasWidth = canvas.width;
+    const center = canvasHeight / 2;
+    const ctx = canvas.getContext('2d');
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 4;
+    ctx.font = '14px Georgia';
+
+    const arr = [];
+    for (let i = 0; i <= (canvasWidth / 6) - 1; i++) {
+      arr.push({
+        above: Math.round(randomNumber(20, 50)),
+        below: Math.round(randomNumber(0, 50)),
+        index: i,
+        fraction: (i + 1) / (canvasWidth / 6)
+      });
+    }
+
+    // Progress Lines
+
+    function drawLine({ above, below, index, fraction }, fractionDone) {
+      ctx.beginPath();
+      const x = (index * 6) + 2;
+      ctx.moveTo(x, center - above);
+      ctx.lineTo(x, center + below);
+      if (fraction <= fractionDone) {
+        ctx.strokeStyle = 'rgba(255, 0, 0, 1)';
+      } else {
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.4)';
+      }
+      ctx.stroke();
+    }
+
+    let timer = false;
+    function drawLines () {
+      const fractionDone = music.currentTime / music.duration;
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      for (let i = 0; i < arr.length; i++) {
+        drawLine(arr[i], fractionDone);
+      }
+    }
+    
+    
+    // Static Tags
+    
+    
+    function drawTag ({ x, y, text, color }) {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, center);
+      ctx.strokeStyle = color;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(x, center);
+      ctx.arc(x, center, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.stroke();
+
+      const width = ctx.measureText(text).width + 10;
+      ctx.beginPath();
+      ctx.fillStyle = color;
+      ctx.fillRect(x - (width / 2), y - 18, width, 24);
+      ctx.stroke();
+  
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'white';
+      ctx.fillText(text, x, y);
+    }
+
+    const tags = [{
+      x: 100,
+      y: 90,
+      text: 'Introduction',
+      color: 'rgb(0, 255, 64)'
+    }, {
+      x: 150,
+      y: 60,
+      text: 'One_six',
+      color: 'rgb(0, 255, 157)'
+    }, {
+        x: 600,
+        y: 50,
+        text: 'Rapport Building - Energy',
+        color: 'rgb(0, 255, 157)'
+    }, {
+        x: 750,
+        y: 90,
+        text: 'Profile',
+        color: 'blue'
+    }, {
+        x: 800,
+        y: 60,
+        text: 'Rapport Building - Empathy',
+        color: 'rgb(158, 77, 77)'
+    }];
+
+    function drawTags () {
+      for (let i = 0; i < tags.length; i++) {
+        drawTag(tags[i]);
+      }
+    }
+
+    drawLines();
+    drawTags();
+
+
+    // Progress bars
+
+    canvas.addEventListener('click', (event) => {
+      const { duration } = music;
+      let move_progress = (event.offsetX / event.srcElement.clientWidth) * duration;
+      music.currentTime = move_progress;
+    })
+
+    music.addEventListener("timeupdate", (event) => {
+      if (!timer) {
+        timer = true;
+        drawLines();
+        drawTags();
+        setTimeout(() => timer = false, 1000);
+      }
+    });
+  </script>
+</body>
+
+</html>
